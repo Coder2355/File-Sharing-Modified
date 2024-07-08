@@ -10,6 +10,8 @@ from config import ADMINS, FORCE_MSG, START_MSG, CUSTOM_CAPTION, DISABLE_CHANNEL
 from helper_func import subscribed, encode, decode, get_messages
 from database.database import add_user, del_user, full_userbase, present_user
 
+# Time in seconds to wait before deleting messages
+SECONDS = int(os.getenv("SECONDS", "600"))
 
 @Bot.on_message(filters.command('start') & filters.private & subscribed)
 async def start_command(client: Client, message: Message):
@@ -69,11 +71,20 @@ async def start_command(client: Client, message: Message):
                 reply_markup = None
 
             try:
-                await msg.copy(chat_id=message.from_user.id, caption = caption, parse_mode = ParseMode.HTML, reply_markup = reply_markup, protect_content=PROTECT_CONTENT)
+                sent_msg = await msg.copy(chat_id=message.from_user.id, caption=caption, parse_mode=ParseMode.HTML, reply_markup=reply_markup, protect_content=PROTECT_CONTENT)
+                message_ids.append(sent_msg.message_id)
                 await asyncio.sleep(0.5)
             except FloodWait as e:
                 await asyncio.sleep(e.x)
-                await msg.copy(chat_id=message.from_user.id, caption = caption, parse_mode = ParseMode.HTML, reply_markup = reply_markup, protect_content=PROTECT_CONTENT)
+                sent_msg = await msg.copy(chat_id=message.from_user.id, caption=caption, parse_mode=ParseMode.HTML, reply_markup=reply_markup, protect_content=PROTECT_CONTENT)
+                message_ids.append(sent_msg.message_id)
+            except:
+                pass
+        
+        await asyncio.sleep(SECONDS)
+        for msg_id in message_ids:
+            try:
+                await client.delete_messages(chat_id=message.from_user.id, message_ids=msg_id)
             except:
                 pass
         return
@@ -193,3 +204,52 @@ Unsuccessful: <code>{unsuccessful}</code></b>"""
         msg = await message.reply(REPLY_ERROR)
         await asyncio.sleep(8)
         await msg.delete()
+
+@Bot.on_message(filters.command('purge_one') & filters.private & filters.user(ADMINS))
+async def purge_req_one(bot, message):
+    r = await message.reply("`processing...`")
+    await delete_all_one()
+    await r.edit("**Req db Cleared**" )
+
+
+@Bot.on_message(filters.command('purge_two') & filters.private & filters.user(ADMINS))
+async def purge_req_two(bot, message):
+    r = await message.reply("`processing...`")
+    await delete_all_two()
+    await r.edit("**Req db Cleared**" )
+
+
+@Bot.on_message(filters.command('add_admin') & filters.private & filters.user(ADMINS))
+async def add_admin(client: Bot, message: Message):
+    if len(message.command) != 2:
+        await message.reply_text("Usage: /add_admin <user_id>")
+        return
+
+    try:
+        new_admin_id = int(message.command[1])
+    except ValueError:
+        await message.reply_text("Invalid user ID format. Please provide a valid user ID.")
+        return
+
+    if new_admin_id in ADMINS:
+        await message.reply_text("This user is already an admin.")
+        return
+
+    ADMINS.append(new_admin_id)
+    await message.reply_text(f"Successfully added {new_admin_id} as an admin.")
+
+try:
+                sent_msg = await msg.copy(chat_id=message.from_user.id, caption=caption, parse_mode=ParseMode.HTML, reply_markup=reply_markup, protect_content=PROTECT_CONTENT)
+                message_ids.append(sent_msg.message_id)
+                await asyncio.sleep(0.5)
+            except FloodWait as e:
+                await asyncio.sleep(e.x)
+                sent_msg = await msg.copy(chat_id=message.from_user.id, caption=caption, parse_mode=ParseMode.HTML, reply_markup=reply_markup, protect_content=PROTECT_CONTENT)
+                message_ids.append(sent_msg.message_id)
+            except:
+                pass
+        
+        await asyncio.sleep(SECONDS)
+        for msg_id in message_ids:
+            try:
+                await client.delete_messages(chat_id=message.from_user.id, message_ids=msg_id)
