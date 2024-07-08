@@ -237,19 +237,3 @@ async def add_admin(client: Bot, message: Message):
 
     ADMINS.append(new_admin_id)
     await message.reply_text(f"Successfully added {new_admin_id} as an admin.")
-
-try:
-                sent_msg = await msg.copy(chat_id=message.from_user.id, caption=caption, parse_mode=ParseMode.HTML, reply_markup=reply_markup, protect_content=PROTECT_CONTENT)
-                message_ids.append(sent_msg.message_id)
-                await asyncio.sleep(0.5)
-            except FloodWait as e:
-                await asyncio.sleep(e.x)
-                sent_msg = await msg.copy(chat_id=message.from_user.id, caption=caption, parse_mode=ParseMode.HTML, reply_markup=reply_markup, protect_content=PROTECT_CONTENT)
-                message_ids.append(sent_msg.message_id)
-            except:
-                pass
-        
-        await asyncio.sleep(SECONDS)
-        for msg_id in message_ids:
-            try:
-                await client.delete_messages(chat_id=message.from_user.id, message_ids=msg_id)
